@@ -6685,7 +6685,7 @@ GameObject:
   - component: {fileID: 1842757046}
   - component: {fileID: 1842757048}
   m_Layer: 0
-  m_Name: GameManager
+  m_Name: SinglePlayManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6744,6 +6744,7 @@ MonoBehaviour:
   startBt: {fileID: 1430995319}
   restartBt: {fileID: 1658876734}
   exitBt: {fileID: 1401352024}
+  isStart: 0
   isOver: 0
   isClear: 0
   isDefend: 0

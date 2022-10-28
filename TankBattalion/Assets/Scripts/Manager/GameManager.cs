@@ -1,9 +1,15 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Nakama;
+using Nakama.TinyJson;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Linq;
+using UnityEngine.Rendering;
+using UnityEngine.SocialPlatforms;
 
-sealed class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
     #region SingleTon
     private static GameManager instance;
@@ -31,232 +37,275 @@ sealed class GameManager : MonoBehaviour
         {
             Destroy(this.gameObject);
         }
-
     }
     #endregion
 
-    private AudioSource audio;
-    // audio
-    [SerializeField] private AudioClip startSound;
-    [SerializeField] private AudioClip overSound;
+    // Panel
+    public GameObject titlePanel;
+    public GameObject selectModePanel;
+    public GameObject WinDisplayPanel;
 
-    // health
-    [SerializeField] private int health = 3;
+    public Button singlePlayBt;
+    public Button multiPlayBt;
 
-    // enemy count that destory mission
-    [SerializeField] private int breakEnemyCount = 20;
+    // Nakama match cashing
+    private IMatch currentMatch;
+    private IUserPresence localUser;
 
-    // score
-    public int score = 0;
+    private GameObject localPlayer;
+    private IDictionary<string, GameObject> players;
 
-    // panel
-    [SerializeField] private GameObject startPanel;
-    [SerializeField] private GameObject topPanel;
-    [SerializeField] private GameObject bottomPanel;
-    [SerializeField] private GameObject resultPanel;
+    public GameObject NetworkLocalPlayerPrefab;
+    public GameObject NetworkRemotePlayerPrefab;
 
-    // img
-    [Tooltip("player HP img")]
-    [SerializeField] private Image[] healthImgs; // player HP img
+    [SerializeField] private Transform[] SpawnPoints;
 
-    [Tooltip("파괴해야 하는 enemy img")]
-    [SerializeField] private Image[] enemyCountImgs; // enemy count img
+    private string localDisplayName;
 
-    // text
-    [Tooltip("최고 점수 Text")]
-    [SerializeField] private Text highScoreText;
+    [Tooltip("이긴 유저 이름 Text")]
+    [SerializeField] private Text WinningPlayerText;
 
-    [Tooltip("현재 라운드 Text")]
-    [SerializeField] private Text roundText;
+    public bool isLocal = false;
 
-    [Tooltip("결과창에 나오는 점수 Text")]
-    [SerializeField] private Text resultScoreText;
-
-    [Tooltip("게임 결과 Text")]
-    [SerializeField] private Text resultText;
-
-    // button
-    [Tooltip("Game Start Buttom")]
-    [SerializeField] private Button startBt;
-
-    [Tooltip("Restart Button")]
-    [SerializeField] private Button restartBt;
-
-    [Tooltip("Exit Button, Can Load Main Scene")]
-    [SerializeField] private Button exitBt;
-
-    // game result flag
-    public bool isStart = false;
-    public bool isOver = false;
-    public bool isClear = false;
-    public bool isDefend = false;
-
-    private void Start()
+    private async void Start()
     {
         if (this.gameObject != null)
         {
-            audio = GetComponent<AudioSource>();
+            await HughServer.GetInstace.ConnecToServer();
 
-            PlaySound("Start");
+            singlePlayBt.onClick.AddListener(SinglePlayMode);
+            multiPlayBt.onClick.AddListener(MultiPlayMode);
 
-            // panel setting
-            startPanel.SetActive(true);
-            Time.timeScale = 0;
-            isStart = false;
+            // nakama match socket bind
+            var mainThread = UnityMainThreadDispatcher.Instance();
 
-            topPanel.SetActive(true);
-            bottomPanel.SetActive(true);
-            resultPanel.SetActive(false);
+            HughServer.GetInstace.Socket.ReceivedMatchmakerMatched += m => mainThread.Enqueue(() => OnRecivedMatchMakerMatched(m));
+            HughServer.GetInstace.Socket.ReceivedMatchPresence += m => mainThread.Enqueue(() => OnReceivedMatchPresence(m)); // 에러 포인트
+            HughServer.GetInstace.Socket.ReceivedMatchState += m => mainThread.Enqueue(async () => await OnReceivedMatchState(m));
 
-            roundText.text = 1.ToString();
-
-            startBt.onClick.AddListener(GameStart);
-            restartBt.onClick.AddListener(Restart);
-            exitBt.onClick.AddListener(ExitGame);
+            ControlWinDisPlayPanel(false);
+            PanelActiveControlWhenMoveScene(true);
         }
     }
 
-    private void Update()
+    private void SinglePlayMode()
     {
-        // update score text display
-        ScoreUpdate();
-
-        // update game result text display
-        if (isClear)
-        {
-            resultText.text = "Game Clear";
-        }
-        else
-        {
-            resultText.text = "Game Over";
-        }
-
+        PanelActiveControlWhenMoveScene(false);
+        HughSceneManager.GetInstace.LoadSinglePlayScene();
     }
 
-    #region Game Manager Function
-
-    private void GameStart()
+    private async void MultiPlayMode()
     {
-        startPanel.SetActive(false);
-
-        audio.Stop();
-        Time.timeScale = 1;
-        isStart = true;
+        PanelActiveControlWhenMoveScene(false);
+        HughSceneManager.GetInstace.LoadMultiPlayScene();
+        await HughServer.GetInstace.FindMatch();
     }
 
-    private void Restart()
+    public async void GoToMainScene()
     {
-        string SceneName = HughSceneManager.GetInstace.GetActiveSceneName();
-        if (SceneName == "SinglePlay")
+        if (HughSceneManager.GetInstace.GetActiveSceneName() == "MultiPlay")
         {
-            HughSceneManager.GetInstace.LoadSinglePlayScene();
-        }
-        else if (SceneName == "MultiPlay")
-        {
-            HughSceneManager.GetInstace.LoadMultiPlayScene();
+            ControlWinDisPlayPanel(false);
+            await QuickMatch();
+            await HughServer.GetInstace.Disconnect();
         }
 
-        ResetSetting();
+        HughSceneManager.GetInstace.LoadMainScene();
+
+        PanelActiveControlWhenMoveScene(true);
     }
 
-    private void ResetSetting()
+    private void PanelActiveControlWhenMoveScene(bool active)
     {
-        //SceneManager.LoadScene(0);
-
-        // panel setting
-        topPanel.SetActive(true);
-        bottomPanel.SetActive(true);
-        resultPanel.SetActive(false);
-
-        // reset the game info
-        score = 0;
-        breakEnemyCount = 20;
-        isOver = false;
-        isClear = false;
-        isStart = true;
-
-        for (int i = 0; i < healthImgs.Length; i++)
-        {
-            healthImgs[i].color = new Color(1, 1, 1, 1);
-        }
-        for (int i = 0; i < enemyCountImgs.Length; i++)
-        {
-            enemyCountImgs[i].color = new Color(0, 1, 1, 1);
-        }
-        Time.timeScale = 1;
+        titlePanel.SetActive(active);
+        selectModePanel.SetActive(active);
     }
 
-    private void ExitGame()
+    public void SetDisplayName(string name)
     {
-        ResetSetting();
-
-        UIManager.Instace.GoToMainScene();
-
-        topPanel.SetActive(false);
-        bottomPanel.SetActive(false);
-        resultPanel.SetActive(false);
-        startPanel.SetActive(false);
+        localDisplayName = name;
     }
 
-    private void PlaySound(string name)
+    public void ControlWinDisPlayPanel(bool active)
     {
-        switch (name)
+        WinDisplayPanel.SetActive(active);
+    }
+    public void GetSpawnPosition(Transform[] transforms)
+    {
+        this.SpawnPoints = transforms;
+    }
+
+    #region Nakama Match Function
+
+    private async void OnRecivedMatchMakerMatched(IMatchmakerMatched matchmakerMatched)
+    {
+        // localuser 캐싱
+        localUser = matchmakerMatched.Self.Presence;
+        var match = await HughServer.GetInstace.Socket.JoinMatchAsync(matchmakerMatched);
+
+#if UNITY_EDITOR
+        Debug.Log("Our Session Id: " + match.Self.SessionId);
+#endif
+
+        foreach (var user in match.Presences)
         {
-            case "Start":
-                audio.clip = startSound;
+            Debug.Log("Connected User Session Id: " + user.SessionId);
+            SpawnPlayer(match.Id, user); // 에러 포인트
+        }
+
+        currentMatch = match;
+    }
+    private void OnReceivedMatchPresence(IMatchPresenceEvent matchPresenceEvent)
+    {
+        // 각 유저 참여시 스폰해주기
+        foreach (var user in matchPresenceEvent.Joins)
+        {
+            Debug.Log("Joint User Session Id : " + user.SessionId);
+            SpawnPlayer(matchPresenceEvent.MatchId, user);
+        }
+
+        // 각 유저가 떠날 때 삭제해주기
+        foreach (var user in matchPresenceEvent.Leaves)
+        {
+            Debug.Log("Leave User Session Id : " + user.SessionId);
+
+            if (players.ContainsKey(user.SessionId))
+            {
+                Destroy(players[user.SessionId]);
+                players.Remove(user.SessionId);
+            }
+        }
+    }
+
+    private async Task OnReceivedMatchState(IMatchState matchState)
+    {
+        // Get the local user's session ID.
+        var userSessionId = matchState.UserPresence.SessionId;
+
+        // If the matchState object has any state length, decode it as a Dictionary.
+        var state = matchState.State.Length > 0 ? System.Text.Encoding.UTF8.GetString(matchState.State).FromJson<Dictionary<string, string>>() : null;
+
+        // Decide what to do based on the Operation Code as defined in OpCodes.
+
+        switch (matchState.OpCode)
+        {
+            case OpCodes.Died:
+                var playerToDestroy = players[userSessionId];
+                Destroy(playerToDestroy, 0.5f);
+                players.Remove(userSessionId);
+                if (players.Count == 1 && players.First().Key == localUser.SessionId)
+                {
+                    AnnounceWinner();
+                }
                 break;
-            case "Over":
-                audio.clip = overSound;
+            case OpCodes.Respawn:
+                SpawnPlayer(currentMatch.Id, matchState.UserPresence, int.Parse(state["spawnIndex"]));
+                break;
+            default:
                 break;
         }
 
-        audio.Play();
     }
-    public void ScoreUpdate()
+    private void SpawnPlayer(string matchId, IUserPresence user, int spawnIndex = -1)
     {
-        highScoreText.text = score.ToString();
+        // 이미 플레이어 생성 했다면 return -> 에러 포인트
+        if (players.ContainsKey(user.SessionId))
+        {
+            return;
+        }
+
+        // Set a variable to check if the player is the local player or not based on session ID.
+        //var isLocal = user.SessionId == localUser.SessionId;
+        isLocal = user.SessionId == localUser.SessionId;
+
+        // Choose the appropriate player prefab based on if it's the local player or not.
+        var playerPrefab = isLocal ? NetworkLocalPlayerPrefab : NetworkRemotePlayerPrefab;
+
+        var spawnPoint = isLocal ? SpawnPoints[0] : SpawnPoints[1];
+
+        // Spawn the new player.
+        var player = Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
+
+        // Setup the appropriate network data values if this is a remote player.
+        if (!isLocal)
+        {
+            player.GetComponent<PlayerNetworkRemoteSync>().NetworkData = new RemotePlayerNetworkData
+            {
+                MatchId = matchId,
+                User = user
+            };
+        }
+
+        // Add the player to the players array.
+        players.Add(user.SessionId, player);
+
+        // If this is our local player, add a listener for the PlayerDied event.
+        if (isLocal)
+        {
+            localPlayer = player;
+        }
     }
 
-    public void HealthDown()
+    public async void OnLocalPlayerDied(GameObject player)
     {
-        if (health > 0)
-        {
-            health--;
-            healthImgs[health].color = new Color(0, 0, 0, 0);
-        }
-        else
-        {
-            healthImgs[0].color = new Color(0, 0, 0, 0);
-            GameOver();
-        }
+        await SendMatchStateAsync(OpCodes.Died, MatchDataJson.Died(player.transform.position));
+
+        players.Remove(localUser.SessionId);
+        Destroy(player, 0.5f);
     }
 
-    public void EnemyDown()
+    public async void AnnounceWinner()
     {
-        score += 300;
-        if (breakEnemyCount > 0)
-        {
-            breakEnemyCount--;
-            enemyCountImgs[breakEnemyCount].color = new Color(0, 0, 0, 0);
-        }
-        else
-        {
-            enemyCountImgs[0].color = new Color(0, 0, 0, 0);
-            isClear = true;
-            GameOver();
-        }
+        var winningPlayerName = localDisplayName;
+        await AnnounceWinner(winningPlayerName);
     }
 
-    public void GameOver()
+    private async Task AnnounceWinner(string winningPlayerName)
     {
-        isOver = true;
-        resultPanel.SetActive(true);
-        resultScoreText.text = "Score " + score.ToString();
+        // Set the winning player text label.
+        WinningPlayerText.text = string.Format("{0} won this round!", winningPlayerName);
 
-        // audio
-        PlaySound("Over");
+        // Wait for 2 seconds.
+        await Task.Delay(2000);
 
-        Time.timeScale = 0;
+        // Reset the winner player text label.
+        WinningPlayerText.text = "";
+
+        // Remove ourself from the players array and destroy our player.
+        players.Remove(localUser.SessionId);
+        Destroy(localPlayer);
+
+        var spawnPoint = isLocal == true ? SpawnPoints[0] : SpawnPoints[1];
+        // Choose a new spawn position and spawn our local player.
+        var spawnIndex = Random.Range(0, spawnPoint.childCount - 1);
+        SpawnPlayer(currentMatch.Id, localUser, spawnIndex);
+
+        // Tell everyone where we respawned.
+        SendMatchState(OpCodes.Respawn, MatchDataJson.Respawned(spawnIndex));
+    }
+
+    private async Task QuickMatch()
+    {
+        await HughServer.GetInstace.Socket.LeaveMatchAsync(currentMatch);
+
+        currentMatch = null;
+        localUser = null;
+
+        foreach (var player in players.Values)
+        {
+            Destroy(player);
+        }
+
+        players.Clear();
+    }
+    public async Task SendMatchStateAsync(long opCode, string state)
+    {
+        await HughServer.GetInstace.Socket.SendMatchStateAsync(currentMatch.Id, opCode, state);
+    }
+
+    public void SendMatchState(long opCode, string state)
+    {
+        HughServer.GetInstace.Socket.SendMatchStateAsync(currentMatch.Id, opCode, state);
     }
     #endregion
 }

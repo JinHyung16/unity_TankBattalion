@@ -18,11 +18,14 @@ public class HughServer : LazySingleton<HughServer>
     protected string SessionPrefName = "nakama.session";
     private const string DeviceIdentifierPrefName = "nakama.deviceUniqueIdentifier";
 
-    protected IClient Client;
-    protected ISession Session;
-    protected ISocket Socket;
+    public IClient Client;
+    public ISession Session;
+    public ISocket Socket;
 
     protected UnityMainThreadDispatcher mainThread;
+
+    private string currentMatchTicket;
+
     public async Task ConnecToServer()
     {
         //device id login
@@ -69,8 +72,6 @@ public class HughServer : LazySingleton<HughServer>
         Debug.Log("<color=orange><b>[HughServer]</b> Socekt Connect : {0} </color>");
 #endif
     }
-
-
     protected async Task SocketConnect()
     {
         Socket = Client.NewSocket(false);
@@ -106,5 +107,21 @@ public class HughServer : LazySingleton<HughServer>
 #if UNITY_EDITOR
         Debug.Log("<color=red><b>[HughServer]</b> Socekt DisConnect : {0} </color>");
 #endif
+    }
+
+    public async Task FindMatch(int minPlayers = 2)
+    {
+        var matchMaking = new Dictionary<string, string>
+        {
+            {"engine", "unity" }
+        };
+
+        var matchMakerTicket = await Socket.AddMatchmakerAsync("+properties.engine:unity", minPlayers, minPlayers, matchMaking);
+        currentMatchTicket = matchMakerTicket.Ticket;
+    }
+
+    public async Task CancelMatch()
+    {
+        await Socket.RemoveMatchmakerAsync(currentMatchTicket);
     }
 }
