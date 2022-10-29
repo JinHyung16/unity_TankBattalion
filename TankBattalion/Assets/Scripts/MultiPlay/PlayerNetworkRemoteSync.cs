@@ -9,6 +9,7 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
 {
     //Animator playerAnim;
     AudioSource playerAudio;
+    public RemotePlayerNetworkData netWorkData;
 
     private PlayerMovementController playerMovementController;
     private PlayerWeaponController playerWeaponController;
@@ -19,12 +20,10 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
     [SerializeField] private AudioClip fireSound;
     [SerializeField] private AudioClip exploSound;
 
-    public RemotePlayerNetworkData NetworkData;
-
     // interpolation to the player move speed
     public float LerpTime = 0.05f;
 
-    public float playerMoveSpeed;
+    public Rigidbody2D rigidBody2D;
     public Transform playerTransform;
 
     private float lerpTimer;
@@ -34,20 +33,22 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
 
     private void Start()
     {
+        HughServer.GetInstace.Socket.ReceivedMatchState += EnqueueOnReceivedMatchState;
+
         //playerAnim = this.gameObject.GetComponent<Animator>();
-        playerAudio = this.gameObject.GetComponent<AudioSource>();
+        playerAudio = GetComponentInChildren<AudioSource>();
 
         playerMovementController = GetComponentInChildren<PlayerMovementController>();
         playerWeaponController = GetComponentInChildren<PlayerWeaponController>();
 
-        GameManager.Instance.SetDisplayName(this.gameObject.name);
+        rigidBody2D = GetComponentInChildren<Rigidbody2D>();
+        playerTransform = rigidBody2D.GetComponent<Transform>();
 
-        HughServer.GetInstace.Socket.ReceivedMatchState += EnqueueOnReceivedMatchState;
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.CompareTag("EBullet"))
+        if (collision.gameObject.CompareTag("MultiBullet"))
         {
             // effect
             GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
@@ -62,6 +63,26 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
             DieSound();
         }
     }
+
+    /*
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("MultiBullet"))
+        {
+            // effect
+            GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
+            Destroy(effect, 0.5f);
+
+            MultiPlayManager.Instance.HealthDown();
+
+            // ÃÑ¾Ë Áö¿ì±â
+            Destroy(collision.gameObject);
+
+            // sound
+            DieSound();
+        }
+    }
+    */
 
     private void OnDestroy()
     {
@@ -101,7 +122,7 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
     private void OnReceivedMatchState(IMatchState matchState)
     {
         // If the incoming data is not related to this remote player, ignore it and return early.
-        if (matchState.UserPresence.SessionId != NetworkData.User.SessionId)
+        if (matchState.UserPresence.SessionId != netWorkData.User.SessionId)
         {
             return;
         }
@@ -110,7 +131,7 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
         switch (matchState.OpCode)
         {
             case OpCodes.VelocityAndPosition:
-                UpdateSpeedAndPositionFromState(matchState.State);
+                UpdateVelocityAndPosition(matchState.State);
                 break;
             case OpCodes.Input:
                 SetInputFromState(matchState.State);
@@ -129,11 +150,12 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
     }
 
 
-    private void UpdateSpeedAndPositionFromState(byte[] state)
+    private void UpdateVelocityAndPosition(byte[] state)
     {
         var stateDictionary = GetStateAsDictionary(state);
 
-        playerMoveSpeed = float.Parse(stateDictionary["moveSpeed"]);
+        rigidBody2D.velocity = new Vector2(float.Parse(stateDictionary["velocity.x"]), 
+            float.Parse(stateDictionary["velocity.y"])); ;
 
         var position = new Vector2(
             float.Parse(stateDictionary["position.x"]),
@@ -149,7 +171,8 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
     {
         var stateDictionary = GetStateAsDictionary(state);
 
-        playerMovementController.SetHorizontalMovement(float.Parse(stateDictionary["horizontal"]), float.Parse(stateDictionary["vertical"]));
+        playerMovementController.SetDirectionMovement(float.Parse(stateDictionary["horizontalInput"]), 
+            float.Parse(stateDictionary["verticalInput"]));
         
         if (bool.Parse(stateDictionary["fire"]))
         {

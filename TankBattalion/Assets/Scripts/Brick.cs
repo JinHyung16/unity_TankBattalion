@@ -20,7 +20,8 @@ public class Brick : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if(collision.CompareTag("PBullet") || collision.CompareTag("EBullet"))
+        if (collision.CompareTag("PBullet") || collision.CompareTag("EBullet")
+            || collision.CompareTag("MultiBullet"))
         {
             PlaySound("Explo");
             breakPos = tilemap.WorldToCell(collision.transform.position);

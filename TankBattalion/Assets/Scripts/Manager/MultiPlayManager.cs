@@ -1,7 +1,11 @@
+using Nakama;
+using Nakama.TinyJson;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MultiPlayManager : MonoBehaviour
+sealed class MultiPlayManager : MonoBehaviour
 {
     #region SingleTon
     private static MultiPlayManager instance;
@@ -41,11 +45,9 @@ public class MultiPlayManager : MonoBehaviour
     // health
     [SerializeField] private int health = 3;
 
-    // score
-    public int score = 0;
-
     // panel
     [SerializeField] private GameObject startPanel;
+    [SerializeField] private GameObject topPanel;
     [SerializeField] private GameObject bottomPanel;
     [SerializeField] private GameObject resultPanel;
 
@@ -63,12 +65,12 @@ public class MultiPlayManager : MonoBehaviour
     [Tooltip("Exit Game Button")]
     [SerializeField] private Button exitBt;
 
+    [Tooltip("Top Button Exist Game")]
+    [SerializeField] private Button topExistBt;
+
     // game result flag
     public bool isStart = false;
     public bool isOver = false;
-
-    // Multi Player spawn position
-    [SerializeField] private Transform[] spawnsPostions;
 
     private void Start()
     {
@@ -83,14 +85,13 @@ public class MultiPlayManager : MonoBehaviour
             Time.timeScale = 0;
             isStart = false;
 
+            topPanel.SetActive(true);
             bottomPanel.SetActive(true);
             resultPanel.SetActive(false);
 
             startBt.onClick.AddListener(GameStart);
             exitBt.onClick.AddListener(ExitGame);
-
-            //spawn point РќДо
-            GameManager.Instance.GetSpawnPosition(this.spawnsPostions);
+            topExistBt.onClick.AddListener(ExitGame);
         }
     }
 
@@ -146,7 +147,6 @@ public class MultiPlayManager : MonoBehaviour
     {
         isOver = true;
         resultPanel.SetActive(true);
-        GameManager.Instance.ControlWinDisPlayPanel(true);
 
         // audio
         PlaySound("Over");
@@ -154,9 +154,9 @@ public class MultiPlayManager : MonoBehaviour
         Time.timeScale = 0;
     }
 
-    public void ExitGame()
+    public async void ExitGame()
     {
-        GameManager.Instance.ControlWinDisPlayPanel(false);
+        await GameManager.Instance.QuickMatch();
         GameManager.Instance.GoToMainScene();
     }
 }

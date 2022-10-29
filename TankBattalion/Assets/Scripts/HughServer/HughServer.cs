@@ -111,12 +111,12 @@ public class HughServer : LazySingleton<HughServer>
 
     public async Task FindMatch(int minPlayers = 2)
     {
-        var matchMaking = new Dictionary<string, string>
+        var matchmakingProperties = new Dictionary<string, string>
         {
             {"engine", "unity" }
         };
 
-        var matchMakerTicket = await Socket.AddMatchmakerAsync("+properties.engine:unity", minPlayers, minPlayers, matchMaking);
+        var matchMakerTicket = await Socket.AddMatchmakerAsync("+properties.engine:unity", minPlayers, minPlayers, matchmakingProperties);
         currentMatchTicket = matchMakerTicket.Ticket;
     }
 

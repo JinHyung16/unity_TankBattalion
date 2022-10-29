@@ -26,8 +26,10 @@ public class PlayerInputController : MonoBehaviour
         playerMovementController = GetComponentInChildren<PlayerMovementController>();
         playerWeaponController = GetComponentInChildren<PlayerWeaponController>();
 
-        anim = GetComponent<Animator>();
-        audio = GetComponent<AudioSource>();
+        anim = GetComponentInChildren<Animator>();
+        audio = GetComponentInChildren<AudioSource>();
+
+        fireKey = KeyCode.Space;
     }
     private void Update()
     {
@@ -46,7 +48,7 @@ public class PlayerInputController : MonoBehaviour
         VerticalInput = verticalInput;
         Fire = fire;
 
-        playerMovementController.SetHorizontalMovement(HorizontalInput, VerticalInput);
+        playerMovementController.SetDirectionMovement(HorizontalInput, VerticalInput);
 
         AnimationController();
 
@@ -64,8 +66,20 @@ public class PlayerInputController : MonoBehaviour
         bool hUp = Input.GetButtonUp("Horizontal");
         bool vUp = Input.GetButtonUp("Vertical");
         bool hDown = Input.GetButtonDown("Horizontal");
-        bool vDown = Input.GetButtonDown("Horizontal");
-        // animation
+        bool vDown = Input.GetButtonDown("Vertical");
+
+        // check horizontal move
+        if (vUp || hDown)
+        {
+            playerMovementController.SetIsHorizontalMove(true);
+            //isHorizontal = true;
+        }
+        else if (hUp || vDown)
+        {
+            playerMovementController.SetIsHorizontalMove(false);
+            //isHorizontal = false;
+        }
+
         // animation
         anim.SetInteger("isHorizontal", (int)direction.x);
         anim.SetInteger("isVertical", (int)direction.y);

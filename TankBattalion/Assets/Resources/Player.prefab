@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7801556803271916782}
-  - component: {fileID: 7756709100456593707}
+  - component: {fileID: 4379930095602431634}
   m_Layer: 0
   m_Name: MovePos
   m_TagString: Untagged
@@ -25,13 +25,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3484887878517919599}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.2, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8546378525301689455}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!50 &7756709100456593707
+--- !u!50 &4379930095602431634
 Rigidbody2D:
   serializedVersion: 4
   m_ObjectHideFlags: 0
@@ -319,7 +319,7 @@ MonoBehaviour:
   stopMovement:
     serializedVersion: 2
     m_Bits: 64
-  moveSpeed: 0
+  moveSpeed: 0.3
   startPos: {x: 0, y: 0, z: 0}
   pBullet: {fileID: 4598835470622358143, guid: 0214bcf0611647444a90f74f48b21692, type: 3}
   fireKey: 32
@@ -354,7 +354,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7175479361422260638}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 8546378525301689455}

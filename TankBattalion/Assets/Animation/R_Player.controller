@@ -121,6 +121,12 @@ AnimatorController:
   m_Name: R_Player
   serializedVersion: 5
   m_AnimatorParameters:
+  - m_Name: IsBoom
+    m_Type: 4
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 0}
   - m_Name: IsVertical
     m_Type: 3
     m_DefaultFloat: 0
@@ -129,12 +135,6 @@ AnimatorController:
     m_Controller: {fileID: 0}
   - m_Name: IsHorizontal
     m_Type: 3
-    m_DefaultFloat: 0
-    m_DefaultInt: 0
-    m_DefaultBool: 0
-    m_Controller: {fileID: 0}
-  - m_Name: IsBoom
-    m_Type: 4
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0

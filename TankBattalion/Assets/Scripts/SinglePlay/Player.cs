@@ -48,6 +48,8 @@ public class Player : MonoBehaviour
         anim = GetComponent<Animator>();
         audio = GetComponent<AudioSource>();
 
+        moveSpeed = 0.9f;
+        startPos = new Vector3(-1.74f, -2.75f, 0);
         this.gameObject.transform.position = startPos;
         movePoint.parent = null;
     }

@@ -602,6 +602,18 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3349296196263591372, guid: e469e5c894b36954a8b34a5775f67e09, type: 3}
+      propertyPath: moveSpeed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3349296196263591372, guid: e469e5c894b36954a8b34a5775f67e09, type: 3}
+      propertyPath: startPos.x
+      value: -1.74
+      objectReference: {fileID: 0}
+    - target: {fileID: 3349296196263591372, guid: e469e5c894b36954a8b34a5775f67e09, type: 3}
+      propertyPath: startPos.y
+      value: -2.75
+      objectReference: {fileID: 0}
     - target: {fileID: 3973893981786219189, guid: e469e5c894b36954a8b34a5775f67e09, type: 3}
       propertyPath: m_Constraints
       value: 7

@@ -1,15 +1,13 @@
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
 using Nakama;
 using Nakama.TinyJson;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Linq;
-using UnityEngine.Rendering;
-using UnityEngine.SocialPlatforms;
 
-public class GameManager : MonoBehaviour
+sealed class GameManager : MonoBehaviour
 {
     #region SingleTon
     private static GameManager instance;
@@ -43,48 +41,51 @@ public class GameManager : MonoBehaviour
     // Panel
     public GameObject titlePanel;
     public GameObject selectModePanel;
-    public GameObject WinDisplayPanel;
 
     public Button singlePlayBt;
     public Button multiPlayBt;
 
-    // Nakama match cashing
+    // Nakama Setting
     private IMatch currentMatch;
     private IUserPresence localUser;
 
     private GameObject localPlayer;
     private IDictionary<string, GameObject> players;
 
+    public GameObject SpawnPoints;
     public GameObject NetworkLocalPlayerPrefab;
     public GameObject NetworkRemotePlayerPrefab;
 
-    [SerializeField] private Transform[] SpawnPoints;
+    private Transform[] spawnPoints;
 
     private string localDisplayName;
 
+    [SerializeField] private GameObject winDisplayPanel;
+
     [Tooltip("이긴 유저 이름 Text")]
     [SerializeField] private Text WinningPlayerText;
-
-    public bool isLocal = false;
 
     private async void Start()
     {
         if (this.gameObject != null)
         {
-            await HughServer.GetInstace.ConnecToServer();
-
+            // 버튼 연결
             singlePlayBt.onClick.AddListener(SinglePlayMode);
             multiPlayBt.onClick.AddListener(MultiPlayMode);
 
-            // nakama match socket bind
+            winDisplayPanel.SetActive(false);
+
+            PanelActiveControlWhenMoveScene(true);
+
+            // Nakama Match관련 초기 연결
+            players = new Dictionary<string, GameObject>();
             var mainThread = UnityMainThreadDispatcher.Instance();
 
+            await HughServer.GetInstace.ConnecToServer();
             HughServer.GetInstace.Socket.ReceivedMatchmakerMatched += m => mainThread.Enqueue(() => OnRecivedMatchMakerMatched(m));
-            HughServer.GetInstace.Socket.ReceivedMatchPresence += m => mainThread.Enqueue(() => OnReceivedMatchPresence(m)); // 에러 포인트
+            HughServer.GetInstace.Socket.ReceivedMatchPresence += m => mainThread.Enqueue(() => OnReceivedMatchPresence(m));
             HughServer.GetInstace.Socket.ReceivedMatchState += m => mainThread.Enqueue(async () => await OnReceivedMatchState(m));
 
-            ControlWinDisPlayPanel(false);
-            PanelActiveControlWhenMoveScene(true);
         }
     }
 
@@ -97,17 +98,18 @@ public class GameManager : MonoBehaviour
     private async void MultiPlayMode()
     {
         PanelActiveControlWhenMoveScene(false);
-        HughSceneManager.GetInstace.LoadMultiPlayScene();
         await HughServer.GetInstace.FindMatch();
+#if UNITY_EDITOR
+        Debug.Log("<color=orange><b> Find Done Match</b></color>");
+#endif
+        HughSceneManager.GetInstace.LoadMultiPlayScene();
     }
 
     public async void GoToMainScene()
     {
         if (HughSceneManager.GetInstace.GetActiveSceneName() == "MultiPlay")
         {
-            ControlWinDisPlayPanel(false);
             await QuickMatch();
-            await HughServer.GetInstace.Disconnect();
         }
 
         HughSceneManager.GetInstace.LoadMainScene();
@@ -121,18 +123,9 @@ public class GameManager : MonoBehaviour
         selectModePanel.SetActive(active);
     }
 
-    public void SetDisplayName(string name)
+    public void SetDisplayName(string displayName)
     {
-        localDisplayName = name;
-    }
-
-    public void ControlWinDisPlayPanel(bool active)
-    {
-        WinDisplayPanel.SetActive(active);
-    }
-    public void GetSpawnPosition(Transform[] transforms)
-    {
-        this.SpawnPoints = transforms;
+        localDisplayName = displayName;
     }
 
     #region Nakama Match Function
@@ -150,7 +143,7 @@ public class GameManager : MonoBehaviour
         foreach (var user in match.Presences)
         {
             Debug.Log("Connected User Session Id: " + user.SessionId);
-            SpawnPlayer(match.Id, user); // 에러 포인트
+            SpawnPlayer(match.Id, user);
         }
 
         currentMatch = match;
@@ -160,7 +153,6 @@ public class GameManager : MonoBehaviour
         // 각 유저 참여시 스폰해주기
         foreach (var user in matchPresenceEvent.Joins)
         {
-            Debug.Log("Joint User Session Id : " + user.SessionId);
             SpawnPlayer(matchPresenceEvent.MatchId, user);
         }
 
@@ -177,16 +169,16 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // await 사용한게 없어서 뜨는 오류니 잠시 무시하자
     private async Task OnReceivedMatchState(IMatchState matchState)
     {
-        // Get the local user's session ID.
+        // local 유저의 session id 가져오기
         var userSessionId = matchState.UserPresence.SessionId;
 
-        // If the matchState object has any state length, decode it as a Dictionary.
+        // match state의 길이가 있다면 dictionary에 decode해주기
         var state = matchState.State.Length > 0 ? System.Text.Encoding.UTF8.GetString(matchState.State).FromJson<Dictionary<string, string>>() : null;
 
-        // Decide what to do based on the Operation Code as defined in OpCodes.
-
+        // OpCode에 따라 Match 상태 변경
         switch (matchState.OpCode)
         {
             case OpCodes.Died:
@@ -208,20 +200,21 @@ public class GameManager : MonoBehaviour
     }
     private void SpawnPlayer(string matchId, IUserPresence user, int spawnIndex = -1)
     {
-        // 이미 플레이어 생성 했다면 return -> 에러 포인트
+        // 이미 플레이어 생성 했다면 return, 만약 players 초기화 안해주면 에러 생김
         if (players.ContainsKey(user.SessionId))
         {
             return;
         }
 
-        // Set a variable to check if the player is the local player or not based on session ID.
-        //var isLocal = user.SessionId == localUser.SessionId;
-        isLocal = user.SessionId == localUser.SessionId;
+        var spawnPoint = spawnIndex == -1 ?
+            SpawnPoints.transform.GetChild(Random.Range(0, SpawnPoints.transform.childCount - 1))
+            : SpawnPoints.transform.GetChild(spawnIndex);
+
+        // local player인지 아닌지 체크
+        var isLocal = user.SessionId == localUser.SessionId;
 
         // Choose the appropriate player prefab based on if it's the local player or not.
         var playerPrefab = isLocal ? NetworkLocalPlayerPrefab : NetworkRemotePlayerPrefab;
-
-        var spawnPoint = isLocal ? SpawnPoints[0] : SpawnPoints[1];
 
         // Spawn the new player.
         var player = Instantiate(playerPrefab, spawnPoint.position, Quaternion.identity);
@@ -229,7 +222,7 @@ public class GameManager : MonoBehaviour
         // Setup the appropriate network data values if this is a remote player.
         if (!isLocal)
         {
-            player.GetComponent<PlayerNetworkRemoteSync>().NetworkData = new RemotePlayerNetworkData
+            player.GetComponent<PlayerNetworkRemoteSync>().netWorkData = new RemotePlayerNetworkData
             {
                 MatchId = matchId,
                 User = user
@@ -263,9 +256,9 @@ public class GameManager : MonoBehaviour
     private async Task AnnounceWinner(string winningPlayerName)
     {
         // Set the winning player text label.
-        WinningPlayerText.text = string.Format("{0} won this round!", winningPlayerName);
+        WinningPlayerText.text = string.Format("{0} Won This Round!", winningPlayerName);
 
-        // Wait for 2 seconds.
+        // 2초 기다리기
         await Task.Delay(2000);
 
         // Reset the winner player text label.
@@ -275,16 +268,18 @@ public class GameManager : MonoBehaviour
         players.Remove(localUser.SessionId);
         Destroy(localPlayer);
 
-        var spawnPoint = isLocal == true ? SpawnPoints[0] : SpawnPoints[1];
         // Choose a new spawn position and spawn our local player.
-        var spawnIndex = Random.Range(0, spawnPoint.childCount - 1);
+        // var spawnIndex = Random.Range(0, spawnPoint.childCount - 1);
+
+        // 현재 spawn 장소가 2개가 최대이므로 0이상 2미만으로 index 정해준다.
+        var spawnIndex = Random.Range(0, 2);
         SpawnPlayer(currentMatch.Id, localUser, spawnIndex);
 
         // Tell everyone where we respawned.
         SendMatchState(OpCodes.Respawn, MatchDataJson.Respawned(spawnIndex));
     }
 
-    private async Task QuickMatch()
+    public async Task QuickMatch()
     {
         await HughServer.GetInstace.Socket.LeaveMatchAsync(currentMatch);
 

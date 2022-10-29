@@ -27,6 +27,9 @@ public class Bullet : MonoBehaviour
                 Destroy(effect, 0.5f);
                 Destroy(this.gameObject);
                 break;
+            case "MultiBullet":
+                Destroy(this.gameObject);
+                break;
 
         }
     }
