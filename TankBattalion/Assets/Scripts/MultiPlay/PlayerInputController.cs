@@ -15,10 +15,13 @@ public class PlayerInputController : MonoBehaviour
 
     [HideInInspector] public float HorizontalInput;
     [HideInInspector] public float VerticalInput;
-    [HideInInspector] public bool InputChange = false;
+    [HideInInspector] public bool InputChange;
     [HideInInspector] public bool Fire = false;
 
     [SerializeField] private KeyCode fireKey = KeyCode.None;
+
+    // audio
+    [SerializeField] private AudioClip fireSound;
 
 
     private void Start()
@@ -55,6 +58,7 @@ public class PlayerInputController : MonoBehaviour
         if (Fire)
         {
             playerWeaponController.AttackFire();
+            FireSound();
         }
 
     }
@@ -100,5 +104,11 @@ public class PlayerInputController : MonoBehaviour
         {
             playerWeaponController.SetFirePos(Vector2.left);
         }
+    }
+
+    public void FireSound()
+    {
+        audio.clip = fireSound;
+        audio.Play();
     }
 }

@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 5666377973938822013}
   - component: {fileID: 698199906066236966}
   - component: {fileID: 6708551187934386086}
-  - component: {fileID: 4615493295409598138}
   - component: {fileID: 8028982303846239468}
+  - component: {fileID: 2219405605266808998}
   m_Layer: 7
   m_Name: Enemy
   m_TagString: Enemy
@@ -155,31 +155,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.4, y: 0.3}
   m_EdgeRadius: 0
---- !u!114 &4615493295409598138
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1509580219749385505}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 286c5b8d7a4a8a54a951b709f8464077, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  movePoint: {fileID: 3250785848369250261}
-  stopMovement:
-    serializedVersion: 2
-    m_Bits: 64
-  avoidMovement:
-    serializedVersion: 2
-    m_Bits: 128
-  moveSpeed: 1.5
-  reloadTime: 3
-  eBullet: {fileID: 2120557527625150558, guid: f0b30026fc0da97428052b31a2a39922, type: 3}
-  boomEffect: {fileID: 6162067694034564461, guid: 538ea54d61acb414f9d1bc6fde5f7ebf, type: 3}
-  fireSound: {fileID: 8300000, guid: 649ca83e6b19fa741b565605fe3165ec, type: 3}
-  exploSound: {fileID: 8300000, guid: 1a996d896f9dbde4f977eee1cead8a85, type: 3}
 --- !u!82 &8028982303846239468
 AudioSource:
   m_ObjectHideFlags: 0
@@ -276,6 +251,31 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &2219405605266808998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1509580219749385505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27473afb1ff8cee4fb94e2d653e8d826, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  movePoint: {fileID: 3250785848369250261}
+  stopMovement:
+    serializedVersion: 2
+    m_Bits: 64
+  avoidMovement:
+    serializedVersion: 2
+    m_Bits: 128
+  moveSpeed: 0.5
+  reloadTime: 1.5
+  eBullet: {fileID: 2120557527625150558, guid: f0b30026fc0da97428052b31a2a39922, type: 3}
+  boomEffect: {fileID: 6162067694034564461, guid: 538ea54d61acb414f9d1bc6fde5f7ebf, type: 3}
+  fireSound: {fileID: 8300000, guid: 649ca83e6b19fa741b565605fe3165ec, type: 3}
+  exploSound: {fileID: 8300000, guid: 1a996d896f9dbde4f977eee1cead8a85, type: 3}
 --- !u!1 &3515387518208820248
 GameObject:
   m_ObjectHideFlags: 0

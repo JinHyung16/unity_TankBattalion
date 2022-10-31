@@ -312,20 +312,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 6083075530655660605}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4266d686f14d384799a566eda42142b, type: 3}
+  m_Script: {fileID: 11500000, guid: da9922b1ac7a15540817a13e03f3b123, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   movePoint: {fileID: 7801556803271916782}
   stopMovement:
     serializedVersion: 2
     m_Bits: 64
-  moveSpeed: 0.3
+  moveSpeed: 0.9
   startPos: {x: 0, y: 0, z: 0}
   pBullet: {fileID: 4598835470622358143, guid: 0214bcf0611647444a90f74f48b21692, type: 3}
   fireKey: 32
   maxDelay: 1.5
-  curDelay: 0.2
-  defendTime: 3
+  curDelay: 0
+  defendTime: 0
   maxDefendTime: 5
   boomEffect: {fileID: 6162067694034564461, guid: 538ea54d61acb414f9d1bc6fde5f7ebf, type: 3}
   fireSound: {fileID: 8300000, guid: 649ca83e6b19fa741b565605fe3165ec, type: 3}

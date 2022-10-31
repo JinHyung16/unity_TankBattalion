@@ -12,7 +12,6 @@ public class HughServer : LazySingleton<HughServer>
     protected string Scheme = "http";
     protected string Host = "localhost";
     protected int Port = 7350;
-
     protected string ServerKey = "defaultkey";
 
     protected string SessionPrefName = "nakama.session";
@@ -23,8 +22,6 @@ public class HughServer : LazySingleton<HughServer>
     public ISocket Socket;
 
     protected UnityMainThreadDispatcher mainThread;
-
-    private string currentMatchTicket;
 
     public async Task ConnecToServer()
     {
@@ -68,6 +65,7 @@ public class HughServer : LazySingleton<HughServer>
         }
 
         await SocketConnect();
+        await Socket.ConnectAsync(Session, true);
 #if UNITY_EDITOR
         Debug.Log("<color=orange><b>[HughServer]</b> Socekt Connect : {0} </color>");
 #endif
@@ -76,7 +74,9 @@ public class HughServer : LazySingleton<HughServer>
     {
         Socket = Client.NewSocket(false);
         await Socket.ConnectAsync(Session, true);
-        BindSocketEvents();
+
+        //Game Manager에서 mainThread사용중이라 우선 꺼둠
+        //BindSocketEvents();
 #if UNITY_EDITOR
         Debug.Log("<color=green><b>[HughServer]</b> Socekt Connect : {0} </color>");
 #endif
@@ -107,21 +107,5 @@ public class HughServer : LazySingleton<HughServer>
 #if UNITY_EDITOR
         Debug.Log("<color=red><b>[HughServer]</b> Socekt DisConnect : {0} </color>");
 #endif
-    }
-
-    public async Task FindMatch(int minPlayers = 2)
-    {
-        var matchmakingProperties = new Dictionary<string, string>
-        {
-            {"engine", "unity" }
-        };
-
-        var matchMakerTicket = await Socket.AddMatchmakerAsync("+properties.engine:unity", minPlayers, minPlayers, matchmakingProperties);
-        currentMatchTicket = matchMakerTicket.Ticket;
-    }
-
-    public async Task CancelMatch()
-    {
-        await Socket.RemoveMatchmakerAsync(currentMatchTicket);
     }
 }

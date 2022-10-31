@@ -10,7 +10,7 @@ sealed class MultiPlayManager : MonoBehaviour
     #region SingleTon
     private static MultiPlayManager instance;
 
-    public static MultiPlayManager Instance
+    public static MultiPlayManager GetInstance
     {
         get 
         {
@@ -42,18 +42,11 @@ sealed class MultiPlayManager : MonoBehaviour
     [SerializeField] private AudioClip startSound;
     [SerializeField] private AudioClip overSound;
 
-    // health
-    [SerializeField] private int health = 3;
-
     // panel
     [SerializeField] private GameObject startPanel;
     [SerializeField] private GameObject topPanel;
     [SerializeField] private GameObject bottomPanel;
     [SerializeField] private GameObject resultPanel;
-
-    // img
-    [Tooltip("player HP img")]
-    [SerializeField] private Image[] healthImgs; // player HP img
 
     [Tooltip("게임 결과 Text")]
     [SerializeField] private Text resultText;
@@ -91,7 +84,7 @@ sealed class MultiPlayManager : MonoBehaviour
 
             startBt.onClick.AddListener(GameStart);
             exitBt.onClick.AddListener(ExitGame);
-            topExistBt.onClick.AddListener(ExitGame);
+            topExistBt.onClick.AddListener(TopExitGame);
         }
     }
 
@@ -128,21 +121,6 @@ sealed class MultiPlayManager : MonoBehaviour
         audio.Play();
     }
 
-    public void HealthDown()
-    {
-        if (health > 0)
-        {
-            health--;
-            healthImgs[health].color = new Color(0, 0, 0, 0);
-        }
-        else
-        {
-            healthImgs[0].color = new Color(0, 0, 0, 0);
-            GameOver();
-        }
-    }
-
-
     public void GameOver()
     {
         isOver = true;
@@ -154,9 +132,15 @@ sealed class MultiPlayManager : MonoBehaviour
         Time.timeScale = 0;
     }
 
+    public async void TopExitGame()
+    {
+        await GameManager.GetInstance.QuickMatch();
+        GameManager.GetInstance.GoToMainScene();
+    }
+
     public async void ExitGame()
     {
-        await GameManager.Instance.QuickMatch();
-        GameManager.Instance.GoToMainScene();
+        await GameManager.GetInstance.QuickMatch();
+        GameManager.GetInstance.GoToMainScene();
     }
 }

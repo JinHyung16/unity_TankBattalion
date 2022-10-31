@@ -26,9 +26,9 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
     public Rigidbody2D rigidBody2D;
     public Transform playerTransform;
 
-    private float lerpTimer;
-    private Vector3 lerpFromPosition;
-    private Vector3 lerpToPosition;
+    private float lerpTimer = 0.0f;
+    private Vector2 lerpFromPosition;
+    private Vector2 lerpToPosition;
     private bool lerpPosition;
 
     private void Start()
@@ -45,57 +45,6 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
         playerTransform = rigidBody2D.GetComponent<Transform>();
 
     }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("MultiBullet"))
-        {
-            // effect
-            GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
-            Destroy(effect, 0.5f);
-
-            MultiPlayManager.Instance.HealthDown();
-
-            // ÃÑ¾Ë Áö¿ì±â
-            Destroy(collision.gameObject);
-
-            // sound
-            DieSound();
-        }
-    }
-
-    /*
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (collision.CompareTag("MultiBullet"))
-        {
-            // effect
-            GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
-            Destroy(effect, 0.5f);
-
-            MultiPlayManager.Instance.HealthDown();
-
-            // ÃÑ¾Ë Áö¿ì±â
-            Destroy(collision.gameObject);
-
-            // sound
-            DieSound();
-        }
-    }
-    */
-
-    private void OnDestroy()
-    {
-        HughServer.GetInstace.Socket.ReceivedMatchState -= EnqueueOnReceivedMatchState;
-    }
-
-    public void DieSound()
-    {
-        playerAudio.clip = exploSound;
-        playerAudio.Play();
-    }
-
-    #region Nakama Match Function
     private void LateUpdate()
     {
         if (!lerpPosition)
@@ -103,14 +52,43 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
             return;
         }
 
-        playerTransform.position = Vector3.Lerp(lerpFromPosition, lerpToPosition, lerpTimer / LerpTime);
         lerpTimer += Time.deltaTime;
+
+#if UNITY_EDITOR
+        Debug.Log(lerpTimer);
+#endif
 
         if (lerpTimer >= LerpTime)
         {
             playerTransform.position = lerpToPosition;
             lerpPosition = false;
         }
+
+        playerTransform.position = Vector2.Lerp(lerpFromPosition, lerpToPosition, lerpTimer / LerpTime);
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("MultiBullet"))
+        {
+            // ÃÑ¾Ë Áö¿ì±â
+            Destroy(collision.gameObject);
+
+            // sound
+            DieSound();
+
+            // effect
+            GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
+            Destroy(effect, 0.5f);
+
+            GameManager.GetInstance.LocalPlayerDied(this.gameObject);
+        }
+    }
+
+    public void DieSound()
+    {
+        playerAudio.clip = exploSound;
+        playerAudio.Play();
     }
 
     private void EnqueueOnReceivedMatchState(IMatchState matchState)
@@ -155,7 +133,7 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
         var stateDictionary = GetStateAsDictionary(state);
 
         rigidBody2D.velocity = new Vector2(float.Parse(stateDictionary["velocity.x"]), 
-            float.Parse(stateDictionary["velocity.y"])); ;
+            float.Parse(stateDictionary["velocity.y"]));
 
         var position = new Vector2(
             float.Parse(stateDictionary["position.x"]),
@@ -179,5 +157,4 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
             playerWeaponController.AttackFire();
         }
     }
-    #endregion
 }

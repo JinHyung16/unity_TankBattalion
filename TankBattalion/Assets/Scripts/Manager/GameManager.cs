@@ -6,13 +6,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Net.Sockets;
 
 sealed class GameManager : MonoBehaviour
 {
     #region SingleTon
     private static GameManager instance;
 
-    public static GameManager Instance
+    public static GameManager GetInstance
     {
         get
         {
@@ -46,8 +47,11 @@ sealed class GameManager : MonoBehaviour
     public Button multiPlayBt;
 
     // Nakama Setting
+    private HughServer hughServer;
+
     private IMatch currentMatch;
     private IUserPresence localUser;
+    private string ticket;
 
     private GameObject localPlayer;
     private IDictionary<string, GameObject> players;
@@ -85,7 +89,6 @@ sealed class GameManager : MonoBehaviour
             HughServer.GetInstace.Socket.ReceivedMatchmakerMatched += m => mainThread.Enqueue(() => OnRecivedMatchMakerMatched(m));
             HughServer.GetInstace.Socket.ReceivedMatchPresence += m => mainThread.Enqueue(() => OnReceivedMatchPresence(m));
             HughServer.GetInstace.Socket.ReceivedMatchState += m => mainThread.Enqueue(async () => await OnReceivedMatchState(m));
-
         }
     }
 
@@ -98,7 +101,7 @@ sealed class GameManager : MonoBehaviour
     private async void MultiPlayMode()
     {
         PanelActiveControlWhenMoveScene(false);
-        await HughServer.GetInstace.FindMatch();
+        await FindMatch();
 #if UNITY_EDITOR
         Debug.Log("<color=orange><b> Find Done Match</b></color>");
 #endif
@@ -169,7 +172,7 @@ sealed class GameManager : MonoBehaviour
         }
     }
 
-    // await 사용한게 없어서 뜨는 오류니 잠시 무시하자
+    // 함수 내에서 await 사용 안해서 뜨는 줄
     private async Task OnReceivedMatchState(IMatchState matchState)
     {
         // local 유저의 session id 가져오기
@@ -207,7 +210,7 @@ sealed class GameManager : MonoBehaviour
         }
 
         var spawnPoint = spawnIndex == -1 ?
-            SpawnPoints.transform.GetChild(Random.Range(0, SpawnPoints.transform.childCount - 1))
+            SpawnPoints.transform.GetChild(Random.Range(0, SpawnPoints.transform.childCount))
             : SpawnPoints.transform.GetChild(spawnIndex);
 
         // local player인지 아닌지 체크
@@ -239,7 +242,7 @@ sealed class GameManager : MonoBehaviour
         }
     }
 
-    public async void OnLocalPlayerDied(GameObject player)
+    public async void LocalPlayerDied(GameObject player)
     {
         await SendMatchStateAsync(OpCodes.Died, MatchDataJson.Died(player.transform.position));
 
@@ -259,7 +262,7 @@ sealed class GameManager : MonoBehaviour
         WinningPlayerText.text = string.Format("{0} Won This Round!", winningPlayerName);
 
         // 2초 기다리기
-        await Task.Delay(2000);
+        await Task.Delay(1000);
 
         // Reset the winner player text label.
         WinningPlayerText.text = "";
@@ -301,6 +304,17 @@ sealed class GameManager : MonoBehaviour
     public void SendMatchState(long opCode, string state)
     {
         HughServer.GetInstace.Socket.SendMatchStateAsync(currentMatch.Id, opCode, state);
+    }
+
+    public async Task FindMatch(int minPlayers = 2)
+    {
+        var matchMakingTicket = await HughServer.GetInstace.Socket.AddMatchmakerAsync("*", minPlayers, 8);
+        ticket = matchMakingTicket.Ticket;
+    }
+
+    public async Task CancelMatch()
+    {
+        await HughServer.GetInstace.Socket.RemoveMatchmakerAsync(ticket);
     }
     #endregion
 }

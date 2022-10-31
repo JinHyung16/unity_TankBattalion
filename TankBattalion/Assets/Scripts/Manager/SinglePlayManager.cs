@@ -8,7 +8,7 @@ sealed class SinglePlayManager : MonoBehaviour
     #region SingleTon
     private static SinglePlayManager instance;
 
-    public static SinglePlayManager Instance
+    public static SinglePlayManager GetInstance
     {
         get
         {
@@ -189,7 +189,7 @@ sealed class SinglePlayManager : MonoBehaviour
     {
         ResetSetting();
 
-        GameManager.Instance.GoToMainScene();
+        GameManager.GetInstance.GoToMainScene();
 
         topPanel.SetActive(false);
         bottomPanel.SetActive(false);

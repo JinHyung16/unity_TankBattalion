@@ -73,13 +73,13 @@ public class Enemy : MonoBehaviour
         }
 
         // destory enemy when game over
-        if (SinglePlayManager.Instance.isOver)
+        if (SinglePlayManager.GetInstance.isOver)
         {
             movePoint.parent = this.gameObject.transform;
             Destroy(this.gameObject);
         }
 
-        if (SinglePlayManager.Instance.isDefend)
+        if (SinglePlayManager.GetInstance.isDefend)
         {
             Debug.Log("Enemy: 방어만 하여 더 빠르게 공격!!");
             reloadTime = 1.5f;
@@ -104,7 +104,7 @@ public class Enemy : MonoBehaviour
             GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
             Destroy(effect, 0.5f);
 
-            SinglePlayManager.Instance.EnemyDown();
+            SinglePlayManager.GetInstance.EnemyDown();
 
             // audio
             PlaySound("Die");

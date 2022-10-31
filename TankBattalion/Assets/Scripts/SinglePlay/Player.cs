@@ -69,7 +69,7 @@ public class Player : MonoBehaviour
             if (defendTime >= maxDefendTime)
             {
                 Debug.Log("Player: 방어만 하는 중");
-                SinglePlayManager.Instance.isDefend = true;
+                SinglePlayManager.GetInstance.isDefend = true;
             }
             defendTime = 0.0f;
         }
@@ -88,8 +88,8 @@ public class Player : MonoBehaviour
             GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
             Destroy(effect, 0.5f);
 
-            SinglePlayManager.Instance.isClear = false;
-            SinglePlayManager.Instance.HealthDown();
+            SinglePlayManager.GetInstance.isClear = false;
+            SinglePlayManager.GetInstance.HealthDown();
 
             Destroy(collision.gameObject);
 
@@ -109,7 +109,7 @@ public class Player : MonoBehaviour
         {
             defendTime = 0.0f;
             defending = false;
-            SinglePlayManager.Instance.isDefend = false;
+            SinglePlayManager.GetInstance.isDefend = false;
         }
     }
 

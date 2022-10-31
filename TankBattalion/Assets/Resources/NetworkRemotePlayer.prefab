@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1086767952722167851}
-  - component: {fileID: 7885444731184724117}
+  - component: {fileID: 2972166898444147788}
   m_Layer: 0
   m_Name: NetworkRemotePlayer
   m_TagString: Player
@@ -32,7 +32,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7885444731184724117
+--- !u!114 &2972166898444147788
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,13 +41,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 4946014213479534236}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67487871b2038fb439868f7c3ac49e96, type: 3}
+  m_Script: {fileID: 11500000, guid: 4d5075e810cf1a243baadb48c042132c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   boomEffect: {fileID: 6162067694034564461, guid: 538ea54d61acb414f9d1bc6fde5f7ebf, type: 3}
   fireSound: {fileID: 8300000, guid: 649ca83e6b19fa741b565605fe3165ec, type: 3}
   exploSound: {fileID: 8300000, guid: 1a996d896f9dbde4f977eee1cead8a85, type: 3}
-  LerpTime: 0.02
+  LerpTime: 0.05
   rigidBody2D: {fileID: 2359459622484226438}
   playerTransform: {fileID: 3330933106028801977}
 --- !u!1 &5491656343727448468
@@ -63,9 +63,9 @@ GameObject:
   - component: {fileID: 3124687183133871762}
   - component: {fileID: 2359459622484226438}
   - component: {fileID: 395095591427071523}
-  - component: {fileID: 9028756772403843785}
-  - component: {fileID: 2502113243888309197}
   - component: {fileID: 9051527701423478048}
+  - component: {fileID: 9028756772403843785}
+  - component: {fileID: 5688526583560357854}
   m_Layer: 0
   m_Name: RemotePlayer
   m_TagString: Player
@@ -149,7 +149,7 @@ Animator:
   m_GameObject: {fileID: 5491656343727448468}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: fa986b0b5551bec4ea1ed315e9546989, type: 2}
+  m_Controller: {fileID: 9100000, guid: 6814ce3ea7b82c24581b5acc310ca927, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -189,7 +189,7 @@ BoxCollider2D:
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: -0.075}
@@ -205,34 +205,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.4, y: 0.25}
   m_EdgeRadius: 0
---- !u!114 &9028756772403843785
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5491656343727448468}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19239de382694784bb1d0c8d256d3ad4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 0
---- !u!114 &2502113243888309197
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5491656343727448468}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b660f20db83d35d4ba5076a97824d2bd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pBullet: {fileID: 4598835470622358143, guid: 57e56e6c1595a3e41a45c1ff64c43c54, type: 3}
-  attackTime: 1.5
-  gunDelay: 1.5
 --- !u!82 &9051527701423478048
 AudioSource:
   m_ObjectHideFlags: 0
@@ -329,6 +301,34 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &9028756772403843785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5491656343727448468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 333a8451db38b3d45a0db802b32e048b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 0.9
+--- !u!114 &5688526583560357854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5491656343727448468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30c7392c5b459b34c9bdb8068bc590ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pBullet: {fileID: 4598835470622358143, guid: 0d8f0196acfb96041b24b01a8d7f3586, type: 3}
+  attackTime: 1.5
+  gunDelay: 1.5
 --- !u!1 &9201136199137827237
 GameObject:
   m_ObjectHideFlags: 0

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Flag : MonoBehaviour
 {
-    SpriteRenderer renderer;
+    private SpriteRenderer renderer;
 
     private void Start()
     {
@@ -29,8 +29,8 @@ public class Flag : MonoBehaviour
     {
         if(collision.CompareTag("EBullet"))
         {
-            SinglePlayManager.Instance.isClear = false;
-            SinglePlayManager.Instance.GameOver();
+            SinglePlayManager.GetInstance.isClear = false;
+            SinglePlayManager.GetInstance.GameOver();
             this.gameObject.SetActive(false);
         }
     }

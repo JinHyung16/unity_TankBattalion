@@ -30,16 +30,16 @@ public class SpawnManager : MonoBehaviour
     }
     private void Update()
     {
-        if (SinglePlayManager.Instance.isStart)
+        if (SinglePlayManager.GetInstance.isStart)
         {
             curTime += Time.deltaTime;
-            if ((curTime > enemyRespawnTime) && !SinglePlayManager.Instance.isOver)
+            if ((curTime > enemyRespawnTime) && !SinglePlayManager.GetInstance.isOver)
             {
                 EnemyRespawn();
                 curTime = 0.0f;
             }
 
-            if (SinglePlayManager.Instance.isDefend)
+            if (SinglePlayManager.GetInstance.isDefend)
             {
                 enemyRespawnTime = 3.0f;
             }

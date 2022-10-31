@@ -407,7 +407,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 190632954}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1615ad23c77300c49be60905f762ff03, type: 3}
+  m_Script: {fileID: 11500000, guid: 0a012de27cac83c44a95896a5e1c5f0a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   enemy: {fileID: 1509580219749385505, guid: 34739765020d0c54d8d4aabdce9420ea, type: 3}
@@ -6712,7 +6712,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1842757045}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68fc31bccd0598c4aa2b5f52b3b0ed9c, type: 3}
+  m_Script: {fileID: 11500000, guid: 7743a5035292cbf43b3401feea5a3925, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   startSound: {fileID: 8300000, guid: 03750657ed469074f861366fef01c7e4, type: 3}

@@ -10,15 +10,13 @@ public class PlayerNetworkLocalSync : MonoBehaviour
     // effect prefab
     [SerializeField] private GameObject boomEffect;
 
-    // audio
-    [SerializeField] private AudioClip fireSound;
     [SerializeField] private AudioClip exploSound;
 
     private Rigidbody2D rigidbody2D;
     private Transform playerTransform;
 
     public float StateSyncTimer = 0.1f;
-    private float stateSyncTimer;
+    private float stateSyncTimer = 0.0f;
 
     private void Start()
     {
@@ -33,7 +31,7 @@ public class PlayerNetworkLocalSync : MonoBehaviour
         if (stateSyncTimer <= 0)
         {
             
-            GameManager.Instance.SendMatchState(OpCodes.VelocityAndPosition, 
+            GameManager.GetInstance.SendMatchState(OpCodes.VelocityAndPosition, 
                 MatchDataJson.VelocityAndPosition(rigidbody2D.velocity, playerTransform.position));
 
             stateSyncTimer = StateSyncTimer;
@@ -46,48 +44,27 @@ public class PlayerNetworkLocalSync : MonoBehaviour
             return;
         }
 
-        GameManager.Instance.SendMatchState(OpCodes.Input,
+        GameManager.GetInstance.SendMatchState(OpCodes.Input,
             MatchDataJson.Input(playerInputController.HorizontalInput, playerInputController.VerticalInput, playerInputController.Fire));
     }
 
-    /*
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("MultiBullet"))
         {
+            // ÃÑ¾Ë Áö¿ì±â
+            Destroy(collision.gameObject);
+
             // effect
             GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
             Destroy(effect, 0.5f);
 
-            MultiPlayManager.Instance.HealthDown();
-
-            // ÃÑ¾Ë Áö¿ì±â
-            Destroy(collision.gameObject);
-
             // sound
             DieSound();
+
+            GameManager.GetInstance.LocalPlayerDied(this.gameObject);
         }
     }
-    */
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("MultiBullet"))
-        {
-            // effect
-            GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
-            Destroy(effect, 0.5f);
-
-            MultiPlayManager.Instance.HealthDown();
-
-            // ÃÑ¾Ë Áö¿ì±â
-            Destroy(collision.gameObject);
-
-            // sound
-            DieSound();
-        }
-    }
-
     public void DieSound()
     {
         playerAudio.clip = exploSound;
