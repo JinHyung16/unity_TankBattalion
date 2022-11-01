@@ -17,7 +17,6 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
     [SerializeField] private GameObject boomEffect;
 
     // audio
-    [SerializeField] private AudioClip fireSound;
     [SerializeField] private AudioClip exploSound;
 
     // interpolation to the player move speed
