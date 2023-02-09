@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PlayerNetworkLocalSync : MonoBehaviour
 {
+    private MatchManager matchManager;
     private PlayerInputController playerInputController;
     private AudioSource playerAudio;
 
@@ -11,30 +12,35 @@ public class PlayerNetworkLocalSync : MonoBehaviour
     [SerializeField] private GameObject boomEffect;
 
     [SerializeField] private AudioClip exploSound;
+    private Rigidbody2D rigid2D;
 
-    private Rigidbody2D rigidbody2D;
     private Transform playerTransform;
 
-    public float StateSyncTimer = 0.1f;
+    public float StateFrequency = 0.1f;
     private float stateSyncTimer = 0.0f;
 
     private void Start()
     {
-        playerAudio = GetComponentInChildren<AudioSource>();
-        rigidbody2D = GetComponentInChildren<Rigidbody2D>();
+        matchManager = GameObject.FindGameObjectWithTag("MatchManager").GetComponent<MatchManager>();
+
         playerInputController = GetComponent<PlayerInputController>();
-        playerTransform = rigidbody2D.GetComponent<Transform>();
+
+        rigid2D = GetComponentInChildren<Rigidbody2D>();
+        playerTransform = rigid2D.GetComponent<Transform>();
+
+        playerAudio = GetComponentInChildren<AudioSource>();
     }
 
     private void LateUpdate()
     {
         if (stateSyncTimer <= 0)
         {
-            
-            GameManager.GetInstance.SendMatchState(OpCodes.VelocityAndPosition, 
-                MatchDataJson.VelocityAndPosition(rigidbody2D.velocity, playerTransform.position));
+            matchManager.SendMatchState(
+                OpCodes.VelocityAndPosition,
+                MatchDataJson.VelocityAndPosition(rigid2D.velocity, playerTransform.position)
+                );
 
-            stateSyncTimer = StateSyncTimer;
+            stateSyncTimer = StateFrequency;
         }
 
         stateSyncTimer -= Time.deltaTime;
@@ -44,8 +50,10 @@ public class PlayerNetworkLocalSync : MonoBehaviour
             return;
         }
 
-        GameManager.GetInstance.SendMatchState(OpCodes.Input,
-            MatchDataJson.Input(playerInputController.HorizontalInput, playerInputController.VerticalInput, playerInputController.Fire));
+        matchManager.SendMatchState(
+            OpCodes.Input,
+            MatchDataJson.Input(playerInputController.HorizontalInput, playerInputController.VerticalInput, playerInputController.Fire)
+            );
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -62,7 +70,7 @@ public class PlayerNetworkLocalSync : MonoBehaviour
             // sound
             DieSound();
 
-            GameManager.GetInstance.LocalPlayerDied(this.gameObject);
+            matchManager.LocalPlayerDied(this.gameObject);
         }
     }
     public void DieSound()

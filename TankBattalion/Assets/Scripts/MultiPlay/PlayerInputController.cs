@@ -36,9 +36,28 @@ public class PlayerInputController : MonoBehaviour
     }
     private void Update()
     {
-        InputMovement();
+        float horizontalInput = Input.GetAxisRaw("Horizontal");
+        float verticalInput = Input.GetAxisRaw("Vertical");
+        bool fire = Input.GetKeyDown(fireKey);
+
+        InputChange = (horizontalInput != HorizontalInput || verticalInput != VerticalInput || fire != Fire);
+
+        HorizontalInput = horizontalInput;
+        VerticalInput = verticalInput;
+        Fire = fire;
+
+        playerMovementController.SetDirectionMovement(HorizontalInput, VerticalInput);
+        //playerMovementController.FixedMove(HorizontalInput, VerticalInput);
+        AnimationController();
+
+        if (Fire)
+        {
+            playerWeaponController.AttackFire();
+            FireSound();
+        }
     }
 
+    /*
     private void InputMovement()
     {
         var horizontalInput = Input.GetAxisRaw("Horizontal");
@@ -62,16 +81,18 @@ public class PlayerInputController : MonoBehaviour
         }
 
     }
+    */
 
     private void AnimationController()
     {
         direction = new Vector2(HorizontalInput, VerticalInput);
 
+        /*
         bool hUp = Input.GetButtonUp("Horizontal");
         bool vUp = Input.GetButtonUp("Vertical");
         bool hDown = Input.GetButtonDown("Horizontal");
         bool vDown = Input.GetButtonDown("Vertical");
-
+        
         // check horizontal move
         if (vUp || hDown)
         {
@@ -83,6 +104,7 @@ public class PlayerInputController : MonoBehaviour
             playerMovementController.SetIsHorizontalMove(false);
             //isHorizontal = false;
         }
+        */
 
         // animation
         anim.SetInteger("isHorizontal", (int)direction.x);

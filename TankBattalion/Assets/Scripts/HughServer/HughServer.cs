@@ -1,27 +1,26 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using Nakama;
-using HughSingleTon;
-using System.Threading.Tasks;
 using System;
-using System.Net.Http;
+using System.Threading.Tasks;
+using Nakama;
+using UnityEngine;
+using System.Net.Sockets;
 
-public class HughServer : LazySingleton<HughServer>
+[Serializable]
+[CreateAssetMenu]
+public class HughServer : ScriptableObject
 {
-    protected string Scheme = "http";
-    protected string Host = "localhost";
-    protected int Port = 7350;
-    protected string ServerKey = "defaultkey";
+    public string Scheme = "http";
+    public string Host = "localhost";
+    public int Port = 7350;
+    public string ServerKey = "defaultkey";
 
-    protected string SessionPrefName = "nakama.session";
+    private const string SessionPrefName = "nakama.session";
     private const string DeviceIdentifierPrefName = "nakama.deviceUniqueIdentifier";
 
     public IClient Client;
     public ISession Session;
     public ISocket Socket;
-
-    protected UnityMainThreadDispatcher mainThread;
 
     public async Task ConnecToServer()
     {
@@ -53,10 +52,6 @@ public class HughServer : LazySingleton<HughServer>
                     deviceId = System.Guid.NewGuid().ToString();
                 }
 
-#if UNITY_EDITOR
-                Debug.LogFormat("<color=orange><b>[HughServer]</b> deviceId : {0} </color>", deviceId);
-#endif
-
                 PlayerPrefs.SetString(DeviceIdentifierPrefName, deviceId);
             }
             Session = await Client.AuthenticateDeviceAsync(deviceId);
@@ -64,30 +59,13 @@ public class HughServer : LazySingleton<HughServer>
             PlayerPrefs.SetString(SessionPrefName, Session.AuthToken);
         }
 
-        await SocketConnect();
-        await Socket.ConnectAsync(Session, true);
-#if UNITY_EDITOR
-        Debug.Log("<color=orange><b>[HughServer]</b> Socekt Connect : {0} </color>");
-#endif
-    }
-    protected async Task SocketConnect()
-    {
-        Socket = Client.NewSocket(false);
-        await Socket.ConnectAsync(Session, true);
+        // realtime communication을 위해 새로운 Socket을 열기
+        Socket = Client.NewSocket();
 
-        //Game Manager에서 mainThread사용중이라 우선 꺼둠
-        //BindSocketEvents();
 #if UNITY_EDITOR
-        Debug.Log("<color=green><b>[HughServer]</b> Socekt Connect : {0} </color>");
+        Debug.Log("나카마 서버 연결 완료");
 #endif
-    }
-
-    protected void BindSocketEvents()
-    {
-        if (mainThread == null)
-        {
-            mainThread = UnityMainThreadDispatcher.Instance();
-        }
+        await Socket.ConnectAsync(Session, true);
     }
 
     public async Task Disconnect()
@@ -103,9 +81,18 @@ public class HughServer : LazySingleton<HughServer>
             //await Client.SessionLogoutAsync(Session);
             Session = null;
         }
+    }
 
-#if UNITY_EDITOR
-        Debug.Log("<color=red><b>[HughServer]</b> Socekt DisConnect : {0} </color>");
-#endif
+    private string ticket;
+
+    public async Task FindMatch(int minPlayers = 2)
+    {
+        var matchMakingTicket = await Socket.AddMatchmakerAsync("*", minPlayers, minPlayers);
+        ticket = matchMakingTicket.Ticket;
+    }
+
+    public async Task CancelMatch()
+    {
+        await Socket.RemoveMatchmakerAsync(ticket);
     }
 }

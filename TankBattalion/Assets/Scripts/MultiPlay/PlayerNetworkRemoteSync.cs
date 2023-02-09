@@ -9,8 +9,9 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
 {
     //Animator playerAnim;
     AudioSource playerAudio;
-    public RemotePlayerNetworkData netWorkData;
+    public RemotePlayerNetworkData NetWorkData;
 
+    private MatchManager matchManager;
     private PlayerMovementController playerMovementController;
     private PlayerWeaponController playerWeaponController;
     // effect prefab
@@ -22,28 +23,29 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
     // interpolation to the player move speed
     public float LerpTime = 0.05f;
 
-    public Rigidbody2D rigidBody2D;
-    public Transform playerTransform;
+    private Rigidbody2D rigid2D;
+    private Transform playerTransform;
 
-    private float lerpTimer = 0.0f;
-    private Vector2 lerpFromPosition;
-    private Vector2 lerpToPosition;
+    private float lerpTimer;
+    private Vector3 lerpFromPosition;
+    private Vector3 lerpToPosition;
     private bool lerpPosition;
 
     private void Start()
     {
-        HughServer.GetInstace.Socket.ReceivedMatchState += EnqueueOnReceivedMatchState;
+        matchManager = GameObject.FindGameObjectWithTag("MatchManager").GetComponent<MatchManager>();
 
         //playerAnim = this.gameObject.GetComponent<Animator>();
         playerAudio = GetComponentInChildren<AudioSource>();
 
         playerMovementController = GetComponentInChildren<PlayerMovementController>();
         playerWeaponController = GetComponentInChildren<PlayerWeaponController>();
+        rigid2D = GetComponentInChildren<Rigidbody2D>();
+        playerTransform = rigid2D.GetComponent<Transform>();
 
-        rigidBody2D = GetComponentInChildren<Rigidbody2D>();
-        playerTransform = rigidBody2D.GetComponent<Transform>();
-
+        matchManager.hughServer.Socket.ReceivedMatchState += EnqueueOnReceivedMatchState;
     }
+
     private void LateUpdate()
     {
         if (!lerpPosition)
@@ -51,11 +53,8 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
             return;
         }
 
+        playerTransform.position = Vector3.Lerp(lerpFromPosition, lerpToPosition, lerpTimer / LerpTime);
         lerpTimer += Time.deltaTime;
-
-#if UNITY_EDITOR
-        Debug.Log(lerpTimer);
-#endif
 
         if (lerpTimer >= LerpTime)
         {
@@ -63,7 +62,6 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
             lerpPosition = false;
         }
 
-        playerTransform.position = Vector2.Lerp(lerpFromPosition, lerpToPosition, lerpTimer / LerpTime);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -80,7 +78,7 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
             GameObject effect = Instantiate(boomEffect, transform.position, Quaternion.identity);
             Destroy(effect, 0.5f);
 
-            GameManager.GetInstance.LocalPlayerDied(this.gameObject);
+            matchManager.LocalPlayerDied(this.gameObject);
         }
     }
 
@@ -89,7 +87,6 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
         playerAudio.clip = exploSound;
         playerAudio.Play();
     }
-
     private void EnqueueOnReceivedMatchState(IMatchState matchState)
     {
         var mainThread = UnityMainThreadDispatcher.Instance();
@@ -98,8 +95,9 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
 
     private void OnReceivedMatchState(IMatchState matchState)
     {
+        Debug.Log("OnReceivedMatchState ¿¬°á");
         // If the incoming data is not related to this remote player, ignore it and return early.
-        if (matchState.UserPresence.SessionId != netWorkData.User.SessionId)
+        if (matchState.UserPresence.SessionId != NetWorkData.User.SessionId)
         {
             return;
         }
@@ -108,14 +106,14 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
         switch (matchState.OpCode)
         {
             case OpCodes.VelocityAndPosition:
-                UpdateVelocityAndPosition(matchState.State);
+                UpdateVelocityAndPositionFromState(matchState.State);
                 break;
             case OpCodes.Input:
                 SetInputFromState(matchState.State);
                 break;
             case OpCodes.Died:
-                 //playerMovementController.PlayDeathAnimation();
-                 break;
+                DieSound();
+                break;
             default:
                 break;
         }
@@ -125,35 +123,32 @@ public class PlayerNetworkRemoteSync : MonoBehaviour
     {
         return Encoding.UTF8.GetString(state).FromJson<Dictionary<string, string>>();
     }
-
-
-    private void UpdateVelocityAndPosition(byte[] state)
+    public void SetInputFromState(byte[] state)
     {
-        var stateDictionary = GetStateAsDictionary(state);
+        var myState = GetStateAsDictionary(state);
 
-        rigidBody2D.velocity = new Vector2(float.Parse(stateDictionary["velocity.x"]), 
-            float.Parse(stateDictionary["velocity.y"]));
+        playerMovementController.SetDirectionMovement(float.Parse(myState["hor_input"]), float.Parse(myState["ver_input"]));
 
-        var position = new Vector2(
-            float.Parse(stateDictionary["position.x"]),
-            float.Parse(stateDictionary["position.y"]));
-
-        lerpFromPosition = playerTransform.position;
-        lerpToPosition = position;
-        lerpTimer = 0;
-        lerpPosition = true;
-    }
-
-    private void SetInputFromState(byte[] state)
-    {
-        var stateDictionary = GetStateAsDictionary(state);
-
-        playerMovementController.SetDirectionMovement(float.Parse(stateDictionary["horizontalInput"]), 
-            float.Parse(stateDictionary["verticalInput"]));
-        
-        if (bool.Parse(stateDictionary["fire"]))
+        if (bool.Parse(myState["fire"]))
         {
             playerWeaponController.AttackFire();
         }
+    }
+
+    public void UpdateVelocityAndPositionFromState(byte[] state)
+    {
+        var myState = GetStateAsDictionary(state);
+
+        rigid2D.velocity = new Vector2(float.Parse(myState["velocity_x"]), float.Parse(myState["velocity_y"]));
+
+        var pos = new Vector3(
+            float.Parse(myState["position_x"]),
+            float.Parse(myState["position_y"]),
+            0);
+
+        lerpFromPosition = playerTransform.position;
+        lerpToPosition = pos;
+        lerpTimer = 0;
+        lerpPosition = true;
     }
 }

@@ -4,38 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using HughGeneric;
 
-sealed class MultiPlayManager : MonoBehaviour
+public class MultiPlayManager : Singleton<MultiPlayManager>
 {
-    #region SingleTon
-    private static MultiPlayManager instance;
-
-    public static MultiPlayManager GetInstance
-    {
-        get 
-        {
-            if (instance == null)
-            {
-                return null;
-            }
-            return instance; 
-        }
-    }
-
-    private void Awake()
-    {
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(this.gameObject);
-        }
-        else
-        {
-            Destroy(this.gameObject);
-        }
-    }
-
-    #endregion
+    public MatchManager matchManager;
 
     private AudioSource audio;
     // audio
@@ -75,7 +48,6 @@ sealed class MultiPlayManager : MonoBehaviour
 
             // panel setting
             startPanel.SetActive(true);
-            Time.timeScale = 0;
             isStart = false;
 
             topPanel.SetActive(true);
@@ -97,13 +69,14 @@ sealed class MultiPlayManager : MonoBehaviour
         }
     }
 
-    private void GameStart()
+    private async void GameStart()
     {
         startPanel.SetActive(false);
 
         audio.Stop();
-        Time.timeScale = 1;
         isStart = true;
+
+        await matchManager.hughServer.FindMatch();
     }
 
     private void PlaySound(string name)
@@ -128,19 +101,17 @@ sealed class MultiPlayManager : MonoBehaviour
 
         // audio
         PlaySound("Over");
-
-        Time.timeScale = 0;
     }
 
-    public async void TopExitGame()
+    private async void TopExitGame()
     {
-        await GameManager.GetInstance.QuickMatch();
+        await matchManager.QuickMatch();
         GameManager.GetInstance.GoToMainScene();
     }
 
-    public async void ExitGame()
+    private async void ExitGame()
     {
-        await GameManager.GetInstance.QuickMatch();
+        await matchManager.QuickMatch();
         GameManager.GetInstance.GoToMainScene();
     }
 }

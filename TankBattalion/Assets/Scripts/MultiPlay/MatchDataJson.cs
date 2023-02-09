@@ -5,14 +5,14 @@ using System.Collections.Generic;
 public static class MatchDataJson
 {
     // move speed and position data
-    public static string VelocityAndPosition(Vector2 velocity, Vector2 position)
+    public static string VelocityAndPosition(Vector2 velocity, Vector3 position)
     {
         var values = new Dictionary<string, string>
         {
-            {"velocity.x", velocity.x.ToString() },
-            {"velocity.y", velocity.y.ToString() },
-            {"position.x", position.x.ToString() },
-            {"position.y", position.y.ToString() },
+            {"velocity_x", velocity.x.ToString() },
+            {"velocity_y", velocity.y.ToString() },
+            {"position_x", position.x.ToString() },
+            {"position_y", position.y.ToString() },
         };
 
         return values.ToJson();
@@ -23,20 +23,9 @@ public static class MatchDataJson
     {
         var values = new Dictionary<string, string>
         {
-            {"horizontalInput", horizontalInput.ToString() },
-            {"verticalInput", verticalInput.ToString() },
+            {"hor_input", horizontalInput.ToString() },
+            {"ver_input", verticalInput.ToString() },
             {"fire", fireInput.ToString() },
-        };
-
-        return values.ToJson();
-    }
-
-    // player respawn data
-    public static string Respawned(int spawnIndex)
-    {
-        var values = new Dictionary<string, string>
-        {
-            { "spawnIndex", spawnIndex.ToString() },
         };
 
         return values.ToJson();
@@ -49,6 +38,16 @@ public static class MatchDataJson
         {
             {"position.x", position.x.ToString() },
             {"position.y", position.y.ToString() },
+        };
+
+        return values.ToJson();
+    }
+
+    public static string RoundDoneAndAnounceWin(string winnerPlayerName)
+    {
+        var values = new Dictionary<string, string>
+        {
+            { "winningPlayerName", winnerPlayerName }
         };
 
         return values.ToJson();

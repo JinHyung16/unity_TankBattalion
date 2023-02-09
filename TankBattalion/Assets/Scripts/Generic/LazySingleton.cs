@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace HughSingleTon
+namespace HughGeneric
 {
     public class LazySingleton<T> where T : class
     {

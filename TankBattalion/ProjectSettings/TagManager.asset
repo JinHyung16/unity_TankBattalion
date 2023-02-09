@@ -12,6 +12,8 @@ TagManager:
   - Flag
   - Defend
   - RemoteBullet
+  - MultiBullet
+  - MatchManager
   layers:
   - Default
   - TransparentFX

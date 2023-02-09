@@ -2,38 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
-sealed class SinglePlayManager : MonoBehaviour
+using HughGeneric;
+public class SinglePlayManager : Singleton<SinglePlayManager>
 {
-    #region SingleTon
-    private static SinglePlayManager instance;
-
-    public static SinglePlayManager GetInstance
-    {
-        get
-        {
-            if (instance == null)
-            {
-                return null;
-            }
-            return instance;
-        }
-    }
-
-    private void Awake()
-    {
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(this.gameObject);
-        }
-        else
-        {
-            Destroy(this.gameObject);
-        }
-    }
-    #endregion
-
     private AudioSource audio;
     // audio
     [SerializeField] private AudioClip startSound;
